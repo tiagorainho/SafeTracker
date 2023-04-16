@@ -1,1 +1,0 @@
- C:\\Users\\ximax\\Desktop\\shift\\fe_shift\\.dart_tool\\flutter_gen\\gen_l10n\\app_localizations_en.dart C:\\Users\\ximax\\Desktop\\shift\\fe_shift\\.dart_tool\\flutter_gen\\gen_l10n\\app_localizations.dart:  C:\\Users\\ximax\\Desktop\\shift\\fe_shift\\l10n.yaml C:\\Users\\ximax\\Desktop\\shift\\fe_shift\\lib/src/localization\\app_en.arb

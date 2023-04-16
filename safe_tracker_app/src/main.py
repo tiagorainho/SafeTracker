@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routes.location_routes import location_route
 from routes.receiver_routes import receiver_route
 from routes.beacons_routes import beacon_route
+import uvicorn
 
 app = FastAPI()
 
@@ -24,3 +25,8 @@ app.include_router(beacon_route)
 @app.get("/health")
 async def health():
     return {"status": "OK"}
+
+if __name__ == '__main__':
+
+    # uvicorn main:app --host 0.0.0.0 --port 8000
+    uvicorn.run(app, host='0.0.0.0', port=8000)

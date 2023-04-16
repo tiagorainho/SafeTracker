@@ -1,9 +1,8 @@
 from __future__ import annotations
-from typing import Mapping, List
+from typing import Mapping, List, Tuple
 import numpy as np, math
 from beacontools import BeaconScanner, EddystoneTLMFrame, BluetoothAddressType, EddystoneUIDFrame
 from time import time
-
 
 signals_buffer: Mapping[str, List[Signal]]
 buffer_max_size = 10
@@ -14,13 +13,13 @@ earthR = 6371
 
 
 class Localization:
-    lat: float
-    lon: float
+    latitude: float
+    longitude: float
     height: float
 
-    def __init__(self, lat: float, lon: float, height: float = 0):
-        self.lat = lat
-        self.lon = lon
+    def __init__(self, latitude: float, longitude: float, height: float = 0):
+        self.latitude = latitude
+        self.longitude = longitude
         self.height = height
 
 class Beacon:
@@ -41,41 +40,40 @@ class Signal:
         self.power_received = power_received
         self.timestamp = timestamp
 
-
+"""
 registered_beacons: Mapping[str, Beacon] = {
     "a"*20: Beacon(localization=Localization(40.623851, -8.656939), power_sent=tran_pow),
     "b"*20: Beacon(Localization=Localization(40.623897, -8.656820), power_sent=tran_pow), 
     "c"*20: Beacon(localization=Localization(40.624074,-8.656998), power_sent=tran_pow)
 }
+"""
 
 
-def triangulate_position_with_3_points(signals: List[Signal]):
+def triangulate_position_with_3_points(signals: List[Tuple[Beacon, Signal]]):
 
-    for i, signal in enumerate(signals):
-        print(f"{signal.beacon_id}: {distances[i]*1000}")
+    connected_beacons = [beacon for (beacon, _) in signals]
 
-    connected_beacons = [registered_beacons[signal.beacon_id] for signal in signals]
-
-    distances = [(registered_beacons[signal.beacon_id].power_sent/(4*np.pi * signal.power_received))**(1/2) * Area for signal in signals]
+    distances = [(pow(10,beacon.power_sent/10)/1000/(4*np.pi * pow(10,signal.power_received/10)/1000))**(1/2) * Area for beacon, signal in signals]
     
     # Point 1
-    xA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.lat)) * math.cos(math.radians(connected_beacons[0].localization.lon)))
-    yA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.lat)) * math.sin(math.radians(connected_beacons[0].localization.lon)))
-    zA = (earthR) *(math.sin(math.radians(connected_beacons[0].localization.lat)))
+    xA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.latitude)) * math.cos(math.radians(connected_beacons[0].localization.longitude)))
+    yA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.latitude)) * math.sin(math.radians(connected_beacons[0].localization.longitude)))
+    zA = (earthR) *(math.sin(math.radians(connected_beacons[0].localization.latitude)))
 
     # Point 2
-    xB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.lat)) * math.cos(math.radians(connected_beacons[1].localization.lon)))
-    yB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.lat)) * math.sin(math.radians(connected_beacons[1].localization.lon)))
-    zB = (earthR) *(math.sin(math.radians(connected_beacons[1].localization.lat)))
+    xB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.latitude)) * math.cos(math.radians(connected_beacons[1].localization.longitude)))
+    yB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.latitude)) * math.sin(math.radians(connected_beacons[1].localization.longitude)))
+    zB = (earthR) *(math.sin(math.radians(connected_beacons[1].localization.latitude)))
 
     # Point 3
-    xC = (earthR) *(math.cos(math.radians(connected_beacons[2].localization.lat)) * math.cos(math.radians(connected_beacons[2].localization.lon)))
-    yC = (earthR) *(math.cos(math.radians(connected_beacons[2].localization.lat)) * math.sin(math.radians(connected_beacons[2].localization.lon)))
-    zC = (earthR) *(math.sin(math.radians(connected_beacons[2].localization.lat)))
+    xC = (earthR) *(math.cos(math.radians(connected_beacons[2].localization.latitude)) * math.cos(math.radians(connected_beacons[2].localization.longitude)))
+    yC = (earthR) *(math.cos(math.radians(connected_beacons[2].localization.latitude)) * math.sin(math.radians(connected_beacons[2].localization.longitude)))
+    zC = (earthR) *(math.sin(math.radians(connected_beacons[2].localization.latitude)))
 
     P1 = np.array([xA, yA, zA])
     P2 = np.array([xB, yB, zB])
     P3 = np.array([xC, yC, zC])
+
 
     ex = (P2 - P1)/(np.linalg.norm(P2 - P1))
     i = np.dot(ex, P3 - P1)
@@ -87,7 +85,7 @@ def triangulate_position_with_3_points(signals: List[Signal]):
 
     x = (pow(distances[0],2) - pow(distances[1],2) + pow(d,2))/(2*d)
     y = ((pow(distances[0],2) - pow(distances[2],2) + pow(i,2) + pow(j,2))/(2*j)) - ((i/j)*x)
-    z = np.sqrt(pow(distances[0],2) - pow(x,2) - pow(y,2))
+    z = np.sqrt(abs(pow(distances[0],2) - pow(x,2) - pow(y,2)))
 
     tmp=pow(distances[0],2) - pow(x,2) - pow(y,2)
     if pow(distances[0],2) - pow(x,2) - pow(y,2)>0:
@@ -111,23 +109,20 @@ def triangulate_position_with_3_points(signals: List[Signal]):
     
     return new_pos
 
-def triangulate_position_with_2_points(signals: List[Signal]):
+def triangulate_position_with_2_points(signals: List[Tuple[Beacon, Signal]]):
 
-    for i, signal in enumerate(signals):
-        print(f"{signal.beacon_id}: {distances[i]*1000}")
+    connected_beacons = [beacon for beacon, _ in signals]
 
-    connected_beacons = [registered_beacons[signal.beacon_id] for signal in signals]
-
-    distances = [(registered_beacons[signal.beacon_id].power_sent/(4*np.pi * signal.power_received))**(1/2) * Area for signal in signals]
+    distances = [(beacon.power_sent/(4*np.pi * signal.power_received))**(1/2) * Area for beacon, signal in signals]
 
 
-    xA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.lat)) * math.cos(math.radians(connected_beacons[0].localization.lon)))
-    yA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.lat)) * math.sin(math.radians(connected_beacons[0].localization.lon)))
-    zA = (earthR) *(math.sin(math.radians(connected_beacons[0].localization.lat)))
+    xA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.latitude)) * math.cos(math.radians(connected_beacons[0].localization.longitude)))
+    yA = (earthR) *(math.cos(math.radians(connected_beacons[0].localization.latitude)) * math.sin(math.radians(connected_beacons[0].localization.longitude)))
+    zA = (earthR) *(math.sin(math.radians(connected_beacons[0].localization.latitude)))
 
-    xB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.lat)) * math.cos(math.radians(connected_beacons[1].localization.lon)))
-    yB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.lat)) * math.sin(math.radians(connected_beacons[1].localization.lon)))
-    zB = (earthR) *(math.sin(math.radians(connected_beacons[1].localization.lat)))
+    xB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.latitude)) * math.cos(math.radians(connected_beacons[1].localization.longitude)))
+    yB = (earthR) *(math.cos(math.radians(connected_beacons[1].localization.latitude)) * math.sin(math.radians(connected_beacons[1].localization.longitude)))
+    zB = (earthR) *(math.sin(math.radians(connected_beacons[1].localization.latitude)))
 
     x = (distances[1]*xA + distances[0]*xB)/(distances[0]+distances[1])
     y = (distances[1]*yA + distances[0]*yB)/(distances[0]+distances[1])
@@ -167,21 +162,22 @@ def send_buffer(signals_buffer: Mapping[str, List[Signal]]):
 
     return {beacon_id: np.average([signal.power_received for signal in signals]) for beacon_id, signals in signals_buffer.items()}
 
-def receive_buffer(signals: Mapping[str, float]):
+
+def triangulate_position(signals: List[Beacon, Signal]):
 
     # crop to only the 3 strongest signals
-    while len(signals) > 3:
-        weakest_beacon_id = min(signals, key=signals.get)
-        del signals[weakest_beacon_id]
+    signals = sorted(signals, key=lambda pair: pair[1].power_received)[:3]
+
+    signals = [(Beacon(Localization(beacon["location"]["latitude"], beacon["location"]["longitude"], beacon["location"]["height"]), beacon["power"]), Signal(signal.beacon_id, signal.power_received)) for (beacon, signal) in signals]
     
     if len(signals) == 3:
-        triangulate_position_with_3_points(signals=signals)
+        return triangulate_position_with_3_points(signals=signals)
     elif len(signals) == 2:
-        triangulate_position_with_2_points(signals=signals)
+        return triangulate_position_with_2_points(signals=signals)
     elif len(signals) == 1:
-        pass
-    else:
-        return
+        loc = signals[0][0].localization
+        return (loc.latitude, loc.longitude, loc.height)
+    return None
 
 
 def callback(rssi, packet):

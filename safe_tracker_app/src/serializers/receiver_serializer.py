@@ -1,10 +1,9 @@
 from serializers.location_serializer import locations_serializer
 from typing import List
 
-
 def receiver_serializer(receiver) -> dict:
     return {
-        "receiver_id": receiver["receiver_id"],
+        "id": str(receiver["_id"]),
         "locations": locations_serializer(receiver["locations"])
     }
 

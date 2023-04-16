@@ -1,0 +1,182 @@
+{
+	"info": {
+		"_postman_id": "cfde97fe-a118-4fe1-9d3f-509f0e8582af",
+		"name": "SafeTracker",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "9120022"
+	},
+	"item": [
+		{
+			"name": "add receiver",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/receiver",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"receiver"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "add beacon",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"location\": {\n        \"latitude\": 40.624064,\n        \"longitude\": -8.656928,\n        \"height\": 0\n    },\n    \"power\": -65,\n    \"description\": \"direita cima\",\n    \"beacon_id\": \"12345678\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/beacon",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"beacon"
+					],
+					"query": [
+						{
+							"key": "location",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get location",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "[\n    {\n        \"beacon_id\": \"fac5a6cb-d81f-46c5-9d09-92ff528eb4da\",\n        \"power_received\": -72\n    },\n    {\n        \"beacon_id\": \"2f234454-cf6d-4a0f-adf2-f4911ba9ffa6\",\n        \"power_received\": -75\n    },\n    {\n        \"beacon_id\": \"2f234454-cf6d-4a0f-adf2-f4911ba9ffa7\",\n        \"power_received\": -78\n    }\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{url}}/location/register/643bd13806966c200cf3c791",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"location",
+						"register",
+						"643bd13806966c200cf3c791"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get beacons",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/beacon",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"beacon"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get receivers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/receiver",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"receiver"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get current receiver location",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/receiver/now?receiver_id=643bd13806966c200cf3c791",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"receiver",
+						"now"
+					],
+					"query": [
+						{
+							"key": "receiver_id",
+							"value": "643bd13806966c200cf3c791"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		}
+	]
+}
